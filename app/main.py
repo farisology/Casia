@@ -89,7 +89,7 @@ async def askcohere(user_question: Annotated[str, Path(..., description="user ch
                     model: Annotated[str, Path("command",
                                                description="The model to use for this question, it can only be command (default) or command-light")],
                     api_key: APIKey = Depends(get_api_key)):
-    answer = functions.cohere_interface(user_question, model)
+    answer = functions.cohere_interface(user_question, model, cohere_key)
     return {
         "ai_provider": "cohere",
         "model": model,

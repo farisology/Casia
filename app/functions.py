@@ -4,9 +4,6 @@ import cohere
 import base64
 from botocore.exceptions import ClientError
 
-x = 'YhQmvnCuXCSeI2C0CKQlwWqGtenVuamXcsksNNvp'
-co = cohere.Client(x)
-
 
 def get_secret(sname):
 
@@ -61,7 +58,8 @@ def get_secret(sname):
             return decoded_binary_secret
 
 
-def cohere_interface(question, model):
+def cohere_interface(question, model, cohere_key):
+    co = cohere.Client(cohere_key)
     response = co.generate(
         model=model,
         prompt=question,
