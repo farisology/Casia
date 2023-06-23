@@ -159,3 +159,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 casia KB/openai_key.txt
+casia KB/cleaning plantdb.ipynb
+casia KB/kb embeddings.ipynb
+casia KB/plan411_scraping.ipynb
+casia KB/cleaning plantdb.ipynb
+aws_resources/.terraform
