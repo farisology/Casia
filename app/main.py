@@ -1,5 +1,8 @@
-from typing import Union
+import os
+import json
+from . import functions
 from fastapi import FastAPI
+from typing import Annotated
 from pydantic import BaseModel
 from fastapi.openapi.utils import get_openapi
 from starlette.status import HTTP_403_FORBIDDEN
@@ -36,7 +39,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_KEY = "this is the token"
+cohere_key = json.loads(functions.get_secret("cohere_api_key"))[
+    "cohere_api_key"]
+API_KEY = json.loads(functions.get_secret("casia_api_token"))["api_token"]
 API_KEY_NAME = "api_token"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
@@ -58,6 +63,8 @@ class Message(BaseModel):
 
 
 class Answer(BaseModel):
+    ai_provider: str
+    model: str
     answer: str
 
 
@@ -66,8 +73,25 @@ def read_root():
     return {"message": "Hello from Casia AI Microservice API"}
 
 
-@app.get("/casia/ask/{model}/{user_question}", response_model=Answer, description="", response_description="", response_model_exclude_unset=True)
-async def askcasia(model: str, user_question: str, api_key: APIKey = Depends(get_api_key)):
+@app.get("/casia/ask/openai/{model}/{user_question}", response_model=Answer, description="", response_description="", response_model_exclude_unset=True)
+async def askopenai(model: str, user_question: str, api_key: APIKey = Depends(get_api_key)):
     return {
         "answer": f"your answer, {model}, {user_question}"
+    }
+
+
+@app.get("/casia/ask/cohere/{model}/{user_question}",
+         response_model=Answer,
+         description="Cohere Interface",
+         response_description="This endpoint provide an interfact to interact with cohere ai models",
+         response_model_exclude_unset=True)
+async def askcohere(user_question: Annotated[str, Path(..., description="user chat query")],
+                    model: Annotated[str, Path("command",
+                                               description="The model to use for this question, it can only be command (default) or command-light")],
+                    api_key: APIKey = Depends(get_api_key)):
+    answer = functions.cohere_interface(user_question, model)
+    return {
+        "ai_provider": "cohere",
+        "model": model,
+        "answer": answer
     }
