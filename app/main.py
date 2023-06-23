@@ -73,18 +73,18 @@ def read_root():
     return {"message": "Hello from Casia AI Microservice API"}
 
 
-@app.get("/casia/ask/openai/{model}/{user_question}", response_model=Answer, description="", response_description="", response_model_exclude_unset=True)
+@app.post("/casia/ask/openai/{model}/{user_question}", response_model=Answer, description="", response_description="", response_model_exclude_unset=True)
 async def askopenai(model: str, user_question: str, api_key: APIKey = Depends(get_api_key)):
     return {
         "answer": f"your answer, {model}, {user_question}"
     }
 
 
-@app.get("/casia/ask/cohere/{model}/{user_question}",
-         response_model=Answer,
-         description="Cohere Interface",
-         response_description="This endpoint provide an interfact to interact with cohere ai models",
-         response_model_exclude_unset=True)
+@app.post("/casia/ask/cohere/{model}/{user_question}",
+          response_model=Answer,
+          description="Cohere Interface",
+          response_description="This endpoint provide an interfact to interact with cohere ai models",
+          response_model_exclude_unset=True)
 async def askcohere(user_question: Annotated[str, Path(..., description="user chat query")],
                     model: Annotated[str, Path("command",
                                                description="The model to use for this question, it can only be command (default) or command-light")],
