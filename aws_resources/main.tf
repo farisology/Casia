@@ -186,3 +186,42 @@ resource "aws_instance" "casia_server" {
     Owner   = "Farisology"
   }
 }
+
+resource "aws_security_group" "casia_db_sg" {
+  name        = "casia_db_sg"
+  description = "Allow inbound traffic to "
+  vpc_id      = data.aws_vpc.default.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name    = "casia_db_sg"
+    Project = "casia"
+    Owner   = "Farisology"
+  }
+}
+
+resource "aws_db_instance" "casia_db" {
+  identifier        = "casiadb"
+  db_name           = "casia"
+  instance_class    = "db.t3.micro"
+  allocated_storage = 30
+  engine            = "postgres"
+  # engine_version         = "14.6"
+  skip_final_snapshot    = true
+  publicly_accessible    = true
+  vpc_security_group_ids = [aws_security_group.casia_db_sg.id]
+  username               = "farisology"
+  password               = "do!3ackthis"
+}
