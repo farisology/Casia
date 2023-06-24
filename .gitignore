@@ -164,3 +164,4 @@ casia KB/kb embeddings.ipynb
 casia KB/plan411_scraping.ipynb
 casia KB/cleaning plantdb.ipynb
 aws_resources/.terraform
+casia KB/gpt3_logs/*
