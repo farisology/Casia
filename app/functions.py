@@ -5,14 +5,15 @@ import boto3
 import cohere
 import base64
 import openai
+import psycopg2
 import pinecone
 from time import perf_counter
 from time import time, sleep
 from datetime import datetime
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from botocore.exceptions import ClientError
-from .models import Chats
-from sqlmodel import SQLModel, create_engine, Session
+from .models import Chats, Posts
+from sqlmodel import SQLModel, Session, select
 
 vdb = pinecone.Index("testbed")
 
@@ -98,6 +99,38 @@ def write_chats(created_at_utc,
     with Session(engine) as session:
         session.add(message)
         session.commit()
+
+
+def get_articles():
+    try:
+        connection = psycopg2.connect(
+            f'postgresql://{casiadb_user}:{casiadb_pass}@casiadb.cdmj2hx4hrmn.ap-southeast-1.rds.amazonaws.com/casia')
+        cursor = connection.cursor()
+        postgreSQL_select_Query = "select * from posts"
+        cursor.execute(postgreSQL_select_Query)
+        results = cursor.fetchall()
+        post_obj = list()
+        if len(results) > 1:
+            post_dict = dict()
+            for post in results:
+                post_dict["id"] = post[0]
+                post_dict["created_at"] = post[1]
+                post_dict["title"] = post[2]
+                post_dict["short_description"] = post[3]
+                post_dict["description"] = post[4]
+                post_dict["image_s3_uri"] = post[5]
+                post_obj.append(post_dict)
+
+        return post_obj
+    except (Exception, psycopg2.Error) as error:
+        print("Error while fetching data from PostgreSQL", error)
+
+    finally:
+        # closing database connection.
+        if connection:
+            cursor.close()
+            connection.close()
+            print("PostgreSQL connection is closed")
 
 
 def chadgpt_completion(question, context, model):

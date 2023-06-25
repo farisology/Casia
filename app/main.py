@@ -1,9 +1,11 @@
 import os
 import json
+from .models import Posts
 from . import functions
 from fastapi import FastAPI
-from typing import Annotated
-from pydantic import BaseModel
+from typing import Annotated, List, Any
+from datetime import datetime
+from pydantic import BaseModel, Json
 from fastapi.openapi.utils import get_openapi
 from starlette.status import HTTP_403_FORBIDDEN
 from starlette.middleware.cors import CORSMiddleware
@@ -72,6 +74,11 @@ class Answer(BaseModel):
     answer: str
 
 
+class Recommendations(BaseModel):
+    # articles: List[Posts]
+    articles: Any
+
+
 @app.get("/", response_model=Message)
 def read_root():
     return {"message": "Hello from Casia AI Microservice API"}
@@ -117,3 +124,15 @@ async def askcohere(user_question: Annotated[str, Path(..., description="user ch
             "model": model,
             "answer": answer
         }
+
+
+@app.post("/casia/recsys",
+          response_model=Recommendations,
+          description="Recommendations Interface",
+          response_description="This endpoint provide recommended articles for the user",
+          response_model_exclude_unset=True)
+async def get_recsys(api_key: APIKey = Depends(get_api_key)):
+    articles = functions.get_articles()
+    return {
+        "articles": articles
+    }
