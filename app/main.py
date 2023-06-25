@@ -1,9 +1,11 @@
 import os
 import json
+from .models import Posts
 from . import functions
 from fastapi import FastAPI
-from typing import Annotated
-from pydantic import BaseModel
+from typing import Annotated, List, Any
+from datetime import datetime
+from pydantic import BaseModel, Json
 from fastapi.openapi.utils import get_openapi
 from starlette.status import HTTP_403_FORBIDDEN
 from starlette.middleware.cors import CORSMiddleware
@@ -41,7 +43,11 @@ app.add_middleware(
 
 cohere_key = json.loads(functions.get_secret("cohere_api_key"))[
     "cohere_api_key"]
+openai_key = json.loads(functions.get_secret("openai_key"))["openai_api_key"]
+vdb_key = json.loads(functions.get_secret("pinecone_key"))[
+    "pinecone_client_key"]
 API_KEY = json.loads(functions.get_secret("casia_api_token"))["api_token"]
+
 API_KEY_NAME = "api_token"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
@@ -68,15 +74,27 @@ class Answer(BaseModel):
     answer: str
 
 
+class Recommendations(BaseModel):
+    # articles: List[Posts]
+    articles: Any
+
+
 @app.get("/", response_model=Message)
 def read_root():
     return {"message": "Hello from Casia AI Microservice API"}
 
 
-@app.post("/casia/ask/openai/{model}/{user_question}", response_model=Answer, description="", response_description="", response_model_exclude_unset=True)
+@app.post("/casia/ask/openai/{model}/{user_question}",
+          response_model=Answer,
+          description="",
+          response_description="")
 async def askopenai(model: str, user_question: str, api_key: APIKey = Depends(get_api_key)):
+    answer = functions.openai_interface(
+        user_question, model, openai_key, vdb_key)
     return {
-        "answer": f"your answer, {model}, {user_question}"
+        "ai_provider": "cohere",
+        "model": model,
+        "answer": answer
     }
 
 
@@ -89,9 +107,32 @@ async def askcohere(user_question: Annotated[str, Path(..., description="user ch
                     model: Annotated[str, Path("command",
                                                description="The model to use for this question, it can only be command (default) or command-light")],
                     api_key: APIKey = Depends(get_api_key)):
-    answer = functions.cohere_interface(user_question, model, cohere_key)
+    if len(user_question.split()) < 5:
+        answer = functions.cohere_interface(
+            user_question, model, cohere_key, vdb_key, openai_key)
+        return {
+            "ai_provider": "cohere",
+            "model": model,
+            "answer": answer
+        }
+    else:
+        model = "gpt-3.5-turbo-16k"
+        answer = functions.openai_interface(
+            user_question, model, openai_key, vdb_key)
+        return {
+            "ai_provider": "openai",
+            "model": model,
+            "answer": answer
+        }
+
+
+@app.post("/casia/recsys",
+          response_model=Recommendations,
+          description="Recommendations Interface",
+          response_description="This endpoint provide recommended articles for the user",
+          response_model_exclude_unset=True)
+async def get_recsys(api_key: APIKey = Depends(get_api_key)):
+    articles = functions.get_articles()
     return {
-        "ai_provider": "cohere",
-        "model": model,
-        "answer": answer
+        "articles": articles
     }
