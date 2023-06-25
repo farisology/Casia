@@ -225,3 +225,22 @@ resource "aws_db_instance" "casia_db" {
   username               = "farisology"
   password               = "do!3ackthis"
 }
+
+resource "aws_s3_bucket" "casia_bucket" {
+  bucket = "casia-artefacts-bucket"
+
+  tags = {
+    Name    = "Casia Artefacts Bucket"
+    Project = "casia"
+    Owner   = "Farisology"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "casia_bucket_public" {
+  bucket = aws_s3_bucket.casia_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
