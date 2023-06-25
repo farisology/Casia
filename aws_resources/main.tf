@@ -91,6 +91,13 @@ resource "aws_iam_policy" "casia_ec2_policy" {
         Effect   = "Allow"
         Resource = ["arn:aws:ecr:::repository/casia_registry"]
       },
+      {
+        Action = [
+          "s3:*"
+        ]
+        Effect   = "Allow"
+        Resource = ["*"]
+      }
     ]
   })
 }
