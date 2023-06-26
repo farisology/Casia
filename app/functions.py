@@ -111,14 +111,15 @@ def get_articles():
         results = cursor.fetchall()
         post_obj = list()
         if len(results) > 1:
-            post_dict = dict()
             for post in results:
+                post_dict = dict()
                 post_dict["id"] = post[0]
                 post_dict["created_at"] = post[1]
                 post_dict["title"] = post[2]
                 post_dict["short_description"] = post[3]
                 post_dict["description"] = post[4]
                 post_dict["image_s3_uri"] = post[5]
+                print(post_dict["title"])
                 post_obj.append(post_dict)
 
         return post_obj
