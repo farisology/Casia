@@ -33,7 +33,7 @@ SQLAlchemy==1.4.41
 sqlalchemy2-stubs==0.0.2a34
 sqlmodel==0.0.8
 starlette==0.14.2
-tqdm==4.65.0
+tqdm==4.66.3
 typing_extensions==4.6.3
 urllib3==1.26.19
 uvicorn==0.15.0
